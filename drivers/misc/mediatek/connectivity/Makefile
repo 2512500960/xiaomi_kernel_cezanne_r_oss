@@ -14,6 +14,11 @@
 # Connectivity combo driver
 # If KERNELRELEASE is defined, we've been invoked from the
 # kernel build system and can use its language.
+
+
+# MTK_KERNEL_MODULES_SRC=vendor/mediatek/kernel_modules
+$(warning srctree is $(srctree))
+MTK_KERNEL_MODULES_SRC = $(shell pwd)/../../MTK_kernel_modules-cezanne-r-oss
 ifneq ($(KERNELRELEASE),)
     subdir-ccflags-y += -I$(srctree)/
     subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/base/power/include
@@ -41,32 +46,32 @@ endif
 
 
     # Do build-in for Makefile checking
-    export AUTOCONF_H = $(srctree)/../../../out/target/product/cezanne/obj/KERNEL_OBJ/include/generated/autoconf.h
+    export AUTOCONF_H = $(srctree)/include/generated/autoconf.h
     export CONFIG_WLAN_DRV_BUILD_IN=m
-    export CONFIG_MTK_WIFI_CONNINFRA_SUPPORT=y
-    #export MTK_WLAN_SUPPORT=yes
+    #export CONFIG_MTK_WIFI_CONNINFRA_SUPPORT=y
+    
     ifneq ($(CONFIG_WLAN_DRV_BUILD_IN),)
         $(info $$CONFIG_MTK_COMBO_CHIP is [${CONFIG_MTK_COMBO_CHIP}])
         MTK_PLATFORM_ID := $(patsubst CONSYS_%,%,$(subst ",,$(CONFIG_MTK_COMBO_CHIP)))
         $(info MTK_PLATFORM_ID is [${MTK_PLATFORM_ID}])
-	
+
         ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6885" "CONSYS_6893"))
             export MTK_COMBO_CHIP=CONNAC2X2_SOC3_0
-            PATH_TO_WMT_DRV      = vendor/mediatek/kernel_modules/connectivity/conninfra
+            PATH_TO_WMT_DRV      = $(MTK_KERNEL_MODULES_SRC)/connectivity/conninfra
         else ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6779" "CONSYS_6873" "CONSYS_6853"))
             export MTK_COMBO_CHIP=CONNAC2X2
-            PATH_TO_WMT_DRV      = vendor/mediatek/kernel_modules/connectivity/common
+            PATH_TO_WMT_DRV      = $(MTK_KERNEL_MODULES_SRC)/connectivity/common
         else
             export MTK_COMBO_CHIP=CONNAC
-            PATH_TO_WMT_DRV      = vendor/mediatek/kernel_modules/connectivity/common
+            PATH_TO_WMT_DRV      = $(MTK_KERNEL_MODULES_SRC)/connectivity/common
         endif
 
-        PATH_TO_WLAN_CHR_DRV = vendor/mediatek/kernel_modules/connectivity/wlan/adaptor
-        PATH_TO_WLAN_DRV     = vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m
-	
-        ABS_PATH_TO_WMT_DRV      = $(srctree)/../../../$(PATH_TO_WMT_DRV)
-        ABS_PATH_TO_WLAN_CHR_DRV = $(srctree)/../../../$(PATH_TO_WLAN_CHR_DRV)
-        ABS_PATH_TO_WLAN_DRV     = $(srctree)/../../../$(PATH_TO_WLAN_DRV)
+        PATH_TO_WLAN_CHR_DRV = $(MTK_KERNEL_MODULES_SRC)/connectivity/wlan/adaptor
+        PATH_TO_WLAN_DRV     = $(MTK_KERNEL_MODULES_SRC)/connectivity/wlan/core/gen4m
+
+        ABS_PATH_TO_WMT_DRV      = $(PATH_TO_WMT_DRV)
+        ABS_PATH_TO_WLAN_CHR_DRV = $(PATH_TO_WLAN_CHR_DRV)
+        ABS_PATH_TO_WLAN_DRV     = $(PATH_TO_WLAN_DRV)
 
         # check wlan driver folder
         ifeq (,$(wildcard $(ABS_PATH_TO_WMT_DRV)))
@@ -113,51 +118,55 @@ endif
         endif
 
         # Do build-in for xxx.c checking
-        subdir-ccflags-y += -D MTK_WCN_REMOVE_KERNEL_MODULE
-        subdir-ccflags-y += -D MTK_WCN_BUILT_IN_DRIVER
-        #subdir-ccflags-y += $(ABS_PATH_TO_WMT_DRV)/include
+        #subdir-ccflags-y += -D MTK_WCN_REMOVE_KERNEL_MODULE
+        #subdir-ccflags-y += -D MTK_WCN_BUILT_IN_DRIVER
         obj-y += wmt_drv/
         obj-y += wmt_chrdev_wifi/
         obj-y += wlan_drv_gen4m/
 
-        
+        # For BT built-in mode start @{
         ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6885"))
-             PATH_TO_BT_DRV       = vendor/mediatek/kernel_modules/connectivity/bt/mt66xx/connac2
+             PATH_TO_BT_DRV       = $(MTK_KERNEL_MODULES_SRC)/connectivity/bt/mt66xx/connac2
              export _MTK_BT_CHIP=MTK_CONSYS_MT6885
         else ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6893"))
-             PATH_TO_BT_DRV       = vendor/mediatek/kernel_modules/connectivity/bt/mt66xx/connac2
+             PATH_TO_BT_DRV       = $(MTK_KERNEL_MODULES_SRC)/connectivity/bt/mt66xx/connac2
              export _MTK_BT_CHIP=MTK_CONSYS_MT6893
         else
-             PATH_TO_BT_DRV       = vendor/mediatek/kernel_modules/connectivity/bt/mt66xx/legacy
+             PATH_TO_BT_DRV       = $(MTK_KERNEL_MODULES_SRC)/connectivity/bt/mt66xx/legacy
         endif
-        ABS_PATH_TO_BT_DRV       = $(srctree)/../../../$(PATH_TO_BT_DRV)
+        ABS_PATH_TO_BT_DRV       =  $(PATH_TO_BT_DRV)
         $(shell unlink $(srctree)/$(src)/bt)
         $(shell ln -s $(ABS_PATH_TO_BT_DRV)      $(srctree)/$(src)/bt)
         obj-y += bt/
+        # @} For BT built-in mode end
 
 
+        # For FM built-in mode start @{
+        # for fmradio options
         ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6885" "CONSYS_6893"))
              export CFG_BUILD_CONNAC2=true
         else
              export CFG_BUILD_CONNAC2=false
-        endif
+        endif 
         FM_6631_CHIPS := 6758 6759 6771 6775 6765 6761 3967 6797 6768 6785 8168
         FM_6635_CHIPS := 6779 6885 6873 6893
         ifneq ($(filter $(FM_6631_CHIPS), $(MTK_PLATFORM_ID)),)
-            FM_CHIP := mt6631
+             FM_CHIP := mt6631
         else ifneq ($(filter $(FM_6635_CHIPS), $(MTK_PLATFORM_ID)),)
-            FM_CHIP := mt6635
+             FM_CHIP := mt6635
         endif
         export CFG_FM_CHIP_ID=$(MTK_PLATFORM_ID)
         export CFG_FM_CHIP=$(FM_CHIP)
-        PATH_TO_FMRADIO_DRV       = vendor/mediatek/kernel_modules/connectivity/fmradio
-        ABS_PATH_TO_FMRADIO_DRV  = $(srctree)/../../../$(PATH_TO_FMRADIO_DRV)
+        PATH_TO_FMRADIO_DRV       = $(MTK_KERNEL_MODULES_SRC)/connectivity/fmradio
+        ABS_PATH_TO_FMRADIO_DRV  = $(PATH_TO_FMRADIO_DRV)
         $(shell unlink $(srctree)/$(src)/fmradio)
         $(shell ln -s $(ABS_PATH_TO_FMRADIO_DRV)      $(srctree)/$(src)/fmradio)
         obj-y += fmradio/
+        # @} For FM built-in mode end
 
-        PATH_TO_GPS_DRV      = vendor/mediatek/kernel_modules/connectivity/gps
-        ABS_PATH_TO_GPS_DRV      = $(srctree)/../../../$(PATH_TO_GPS_DRV)
+        # For GPS built-in mode start @{
+        PATH_TO_GPS_DRV      = $(MTK_KERNEL_MODULES_SRC)/connectivity/gps
+        ABS_PATH_TO_GPS_DRV      = $(PATH_TO_GPS_DRV)
         ifeq (,$(wildcard $(ABS_PATH_TO_GPS_DRV)))
              $(error $(ABS_PATH_TO_GPS_DRV) is not existed)
         endif
@@ -165,6 +174,7 @@ endif
         $(shell unlink $(srctree)/$(src)/gps_drv)
         $(shell ln -s $(ABS_PATH_TO_GPS_DRV)      $(srctree)/$(src)/gps_drv)
         obj-y += gps_drv/
+        # @} For GPS built-in mode end
 
     endif
 
