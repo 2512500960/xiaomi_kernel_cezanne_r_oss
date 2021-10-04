@@ -1,0 +1,24 @@
+kernel compile along with the modules
+Part I KERNEL
+1.put the kernel source along with the mtk modules source like this:
+	cezanne   -> kernel source
+	MTK_kernel_modules-cezanne-r-oss -> the name has to be identical
+2.path env setup:
+	export PATH=/home/erlkonig/android/lineage/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:/home/erlkonig/android/lineage/prebuilts/clang/host/linux-x86/clang-r383902/bin:$PATH
+	add the clang-r383902 and aarch64-linux-android-4.9 toolchain to ur path
+3.make step:
+	ARCH=arm64 make CC=clang HOSTCC=gcc AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=out CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- LD=ld.lld cezanne_user_defconfig
+	ARCH=arm64 make CC=clang HOSTCC=gcc AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=out CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- LD=ld.lld -j10
+
+in the first step you will get the kernel image the connectivity driver which is enough for use, mostly u can skip the part II
+
+Part II MTK modules
+1. met_drv_v2:
+	ARCH=arm64 make CC=clang HOSTCC=gcc AR=llvm-ar LD=ld.lld NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=~/Desktop/android-kernel/cezanne/out CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- -C /home/erlkonig/Desktop/android-kernel/cezanne M=$(pwd) AUTOCONF_H=/home/erlkonig/Desktop/android-kernel/cezanne/out/include/generated/autoconf.h
+2. fps_go:
+	ARCH=arm64 make CC=clang HOSTCC=gcc AR=llvm-ar LD=ld.lld NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=~/Desktop/android-kernel/cezanne/out CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- -C /home/erlkonig/Desktop/android-kernel/cezanne M=$(pwd) AUTOCONF_H=/home/erlkonig/Desktop/android-kernel/cezanne/out/include/generated/autoconf.h
+	
+	
+Additional part:
+wlan_drv_gen4m.ko gone oversize:
+	aarch64-linux-android-strip --strip-unneeded wlan_drv_gen4m.ko
