@@ -22,7 +22,9 @@
  */
 int cfg80211_wext_giwname(struct net_device *dev,
 			  struct iw_request_info *info,
-			  union iwreq_data *wrqu, char *extra);
+			  union iwreq_data *wrqu, char *extra);//patched the arguements based on https://www.duo.uio.no/bitstream/handle/10852/79829/8/master.pdf, 
+			  									   //it's a cfi problem, it's a long story why is not fixed before
+												   // since only kernel on android would be compile with clang-cfi enforcement.
 int cfg80211_wext_siwmode(struct net_device *dev, struct iw_request_info *info,
 			  u32 *mode, char *extra);
 int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,

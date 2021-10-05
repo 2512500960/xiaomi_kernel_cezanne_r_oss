@@ -24,7 +24,9 @@
 
 int cfg80211_wext_giwname(struct net_device *dev,
 			  struct iw_request_info *info,
-			  union iwreq_data *wrqu, char *extra)
+			  union iwreq_data *wrqu, char *extra) //patched the arguements based on https://www.duo.uio.no/bitstream/handle/10852/79829/8/master.pdf, 
+			  									   //it's a cfi problem, it's a long story why is not fixed before
+												   // since only kernel on android would be compile with clang-cfi enforcement.
 {
 	strcpy(name, "IEEE 802.11");
 	return 0;
@@ -1467,7 +1469,9 @@ static int cfg80211_wext_siwpmksa(struct net_device *dev,
 		return -EOPNOTSUPP;
 	}
 }
-
+//patched the arguements based on https://www.spinics.net/lists/netdev/msg701211.html, 
+//it's a cfi problem, it's a long story why is not fixed before
+// since only kernel on android would be compile with clang-cfi enforcement.
 #define DEFINE_WEXT_COMPAT_STUB(func, type)			\
 	static int __ ## func(struct net_device *dev,		\
 			      struct iw_request_info *info,	\
